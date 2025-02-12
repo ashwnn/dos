@@ -1,8 +1,20 @@
 # DOS
+Denial Of Service application which has the ability to simulate a real attack by utilizing nodes to perform a distributed attack to a single device on the local network using various types of attacks.
 
 ![Screenshot](screenshot.png)
 
-Test out internal routers by simulating a Denial of Service (DOS) attack on the network. This is done by sending various types of attack on the host which includes: SYN Flood, UDP Flood, ICMP Flood, and Slowloris.
+## Usage
+Server
+```
+pip install -r requirements.txt
+python server.py
+```
+
+Deploying nodes
+```
+pip install aiohttp requests
+python node.py
+```
 
 ## Attack Vectors
 
@@ -23,7 +35,6 @@ UPnP Abuse exploits Universal Plug and Play (UPnP) protocols to trick routers in
 
 ### Credential Stuffing  
 Credential Stuffing automates login attempts using common default credentials (e.g., `admin:admin`) to gain unauthorized access to router admin interfaces or services.
-
 
 ## Disclaimer
 This tool is for educational purposes only. The author will not be responsible for any misuse of this tool.
