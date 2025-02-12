@@ -1,5 +1,5 @@
 # DOS
-Denial Of Service application which has the ability to simulate a real attack by utilizing nodes to perform a distributed attack to a single device on the local network using various types of attacks.
+Denial Of Service application which has the ability to simulate a real attack by utilizing nodes to perform a distributed attack to a single device on the local network using various types of attack vectors.
 
 ![Screenshot](screenshot.png)
 
